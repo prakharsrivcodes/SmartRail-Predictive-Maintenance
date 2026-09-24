@@ -1,38 +1,124 @@
 # SmartRail — Predictive Maintenance & Compressor Health Intelligence
 
-End-to-end machine learning system for predicting compressor failures on a metro train, using real sensor data from the [MetroPT-3 dataset (UCI)](https://archive.ics.uci.edu/dataset/791/metropt+3+dataset).
+An end-to-end machine learning system for predicting compressor failure risk in metro trains using real-world sensor data from the MetroPT-3 dataset.
 
-## Problem
-Given live sensor data (pressure, temperature, motor current) from a metro train's air compressor, predict failure risk before it happens — enabling proactive maintenance instead of reactive repairs.
+🔗 **Live Demo:** https://smart rail-predictive-maintenance.streamlit.app/
 
-## Pipeline
-1. **Data Engineering** — Cleaned 1.5M+ sensor readings, engineered 40+ rolling/lag/statistical features (5-min windows)
-2. **Dimensionality Reduction** — PCA (10 components, 93% variance retained)
-3. **Unsupervised Operating-State Discovery** — KMeans, Agglomerative Clustering, DBSCAN to identify normal vs high-risk operating states
-4. **Classification** — 10 models trained and compared: Logistic Regression, Naive Bayes, KNN, SVM, Decision Tree, Random Forest, Bagging, AdaBoost, Gradient Boosting, XGBoost
-5. **Hyperparameter Tuning** — Optuna-based search on XGBoost (20 trials)
-6. **Ensemble** — Stacking (LR + RF + XGBoost with meta-learner)
-7. **Data Leakage Investigation** — Identified and fixed a temporal leakage bug from random train/test splitting on time-series rolling features; implemented block-wise time-aware splitting for realistic evaluation
+## 🚆 Problem
 
-## Key Results
-| Model | AUC |
-|---|---|
+Air compressors are critical components in metro trains. Unexpected compressor failures can lead to maintenance issues and operational downtime.
+
+SmartRail uses historical sensor data such as pressure, oil temperature, and motor current to estimate compressor failure risk and support proactive maintenance.
+
+## 🔧 ML Pipeline
+
+1. **Data Engineering**
+   - Cleaned 1.5M+ sensor readings
+   - Created rolling statistical features
+   - Engineered lag and difference features
+   - Generated 40+ engineered features
+
+2. **Dimensionality Reduction**
+   - StandardScaler
+   - PCA with 10 components
+   - ~93% variance retained
+
+3. **Unsupervised Learning**
+   - KMeans
+   - Agglomerative Clustering
+   - DBSCAN
+   - Identified different compressor operating states
+
+4. **Classification**
+   - Logistic Regression
+   - Naive Bayes
+   - KNN
+   - SVM
+   - Decision Tree
+   - Random Forest
+   - Bagging
+   - AdaBoost
+   - Gradient Boosting
+   - XGBoost
+
+5. **Hyperparameter Optimization**
+   - Optuna
+   - XGBoost tuning with 20 trials
+
+6. **Ensemble Learning**
+   - Stacking Ensemble
+   - Logistic Regression + Random Forest + XGBoost
+
+7. **Model Evaluation**
+   - Compared models using ROC-AUC
+   - Investigated temporal data leakage
+   - Replaced random splitting with time-aware block splitting for more realistic evaluation
+
+## 📊 Model Results
+
+| Model | ROC-AUC |
+|---|---:|
 | Logistic Regression | 0.9973 |
 | SVM | 0.9993 |
 | Decision Tree | 0.9991 |
-| XGBoost (tuned, time-split) | 0.9997 |
+| Tuned XGBoost | 0.9997 |
 | Stacking Ensemble | 0.9953 |
 
-## Key Finding
-An unsupervised KMeans cluster (representing high motor-current + high oil-temperature operating states) showed a 45% failure rate vs <0.05% in other clusters — validating that unsupervised feature engineering meaningfully improved downstream supervised classification.
+> The extremely high scores were investigated for potential temporal leakage rather than being accepted blindly.
 
-## Tech Stack
-Python, scikit-learn, XGBoost, Optuna, Pandas, Matplotlib
+## 🔍 Key Finding
 
-## Structure
-- `notebooks/` — 10 sequential notebooks covering the full pipeline
-- `models/` — Trained model files (KNN excluded due to file size)
-- `results.json` — All model performance metrics
+KMeans clustering identified an operating state associated with significantly higher failure frequency.
 
-## Note
-This project deliberately investigates and documents a data leakage issue found during development, as a demonstration of rigorous ML evaluation practice — not every model reporting near-perfect AUC is trustworthy without checking *why*.
+One cluster showed approximately **45% failure rate**, compared with **less than 0.05%** in the other clusters.
+
+This provided an additional unsupervised signal for understanding compressor operating conditions.
+
+## 🌐 Streamlit Application
+
+The project includes an interactive Streamlit application where users can enter compressor sensor readings and receive an estimated failure-risk probability.
+
+### Input Sensors
+
+- TP2 Pressure
+- TP3 Pressure
+- H1 Pressure
+- DV Pressure
+- Reservoirs
+- Oil Temperature
+- Motor Current
+
+The application performs the same feature transformation pipeline used during model development before generating the prediction.
+
+## 🛠️ Tech Stack
+
+- Python
+- Pandas
+- NumPy
+- Scikit-learn
+- XGBoost
+- Optuna
+- Matplotlib
+- Streamlit
+- Joblib
+
+## 📁 Project Structure
+
+```text
+SmartRail-Predictive-Maintenance/
+│
+├── models/
+│   ├── classification models
+│   ├── scaler
+│   ├── PCA model
+│   ├── KMeans model
+│   └── stacking model
+│
+├── notebooks/
+│   └── ML pipeline notebooks
+│
+├── streamlit_app/
+│   └── app.py
+│
+├── README.md
+└── requirements.txt
